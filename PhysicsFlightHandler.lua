@@ -42,18 +42,103 @@ antifling = RunService.Stepped:Connect(function()
     end
 end)
 
+-- GUI Setup
+local playerGui = player:WaitForChild("PlayerGui")
+local existingGui = playerGui:FindFirstChild("FlyGui")
+if existingGui then existingGui:Destroy() end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "FlyGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+local frame = Instance.new("Frame")
+frame.Name = "MainFrame"
+frame.Size = UDim2.new(0, 180, 0, 130)
+frame.Position = UDim2.new(0.7, 0, 0.3, 0)
+frame.BackgroundColor3 = Color3.fromRGB(25, 27, 33)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = frame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -10, 0, 25)
+title.Position = UDim2.new(0, 10, 0, 5)
+title.BackgroundTransparency = 1
+title.Text = "Fly"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 16
+title.Font = Enum.Font.SourceSansBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = frame
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, -20, 0, 20)
+statusLabel.Position = UDim2.new(0, 10, 0, 30)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Status: OFF"
+statusLabel.TextColor3 = Color3.fromRGB(220, 60, 60)
+statusLabel.TextSize = 14
+statusLabel.Font = Enum.Font.SourceSans
+statusLabel.Parent = frame
+
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(1, -20, 0, 30)
+toggleBtn.Position = UDim2.new(0, 10, 0, 55)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(45, 50, 62)
+toggleBtn.Text = "ENABLE"
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.TextSize = 14
+toggleBtn.Font = Enum.Font.SourceSansBold
+toggleBtn.Parent = frame
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 6)
+btnCorner.Parent = toggleBtn
+
+local speedBox = Instance.new("TextBox")
+speedBox.Size = UDim2.new(1, -20, 0, 25)
+speedBox.Position = UDim2.new(0, 10, 0, 92)
+speedBox.BackgroundColor3 = Color3.fromRGB(15, 17, 22)
+speedBox.Text = "Speed: " .. tostring(FLY_SPEED)
+speedBox.TextColor3 = Color3.fromRGB(200, 200, 200)
+speedBox.TextSize = 14
+speedBox.Font = Enum.Font.SourceSans
+speedBox.Parent = frame
+
+local boxCorner = Instance.new("UICorner")
+boxCorner.CornerRadius = UDim.new(0, 6)
+boxCorner.Parent = speedBox
+
+-- Function to Update GUI Visual State
+local function updateGuiState()
+    if isFlying then
+        statusLabel.Text = "Status: ON"
+        statusLabel.TextColor3 = Color3.fromRGB(60, 220, 60)
+        toggleBtn.Text = "DISABLE"
+    else
+        statusLabel.Text = "Status: OFF"
+        statusLabel.TextColor3 = Color3.fromRGB(220, 60, 60)
+        toggleBtn.Text = "ENABLE"
+    end
+    speedBox.Text = "Speed: " .. tostring(math.round(currentSpeed))
+end
+
 -- Helper function to setup physics instances
 local function enableFlightPhysics(isInitialEnable)
     if not hrp or not humanoid then return end
 
-    -- Clean up existing forces
     local oldLV = hrp:FindFirstChild("FlyLinearVelocity")
     if oldLV then oldLV:Destroy() end
 
     local oldAO = hrp:FindFirstChild("FlyAlignOrientation")
     if oldAO then oldAO:Destroy() end
 
-    -- Stop active animation tracks safely
     local animator = humanoid:FindFirstChildOfClass("Animator")
     if animator then
         for _, track in animator:GetPlayingAnimationTracks() do
@@ -61,7 +146,6 @@ local function enableFlightPhysics(isInitialEnable)
         end
     end
 
-    -- Create LinearVelocity for smooth directional flying
     linearVelocity = Instance.new("LinearVelocity")
     linearVelocity.Name = "FlyLinearVelocity"
     linearVelocity.MaxForce = 100000
@@ -78,7 +162,6 @@ local function enableFlightPhysics(isInitialEnable)
     linearVelocity.Attachment0 = attachment
     linearVelocity.Parent = hrp
 
-    -- Create AlignOrientation to keep player facing camera direction
     alignOrientation = Instance.new("AlignOrientation")
     alignOrientation.Name = "FlyAlignOrientation"
     alignOrientation.MaxTorque = 100000
@@ -89,7 +172,6 @@ local function enableFlightPhysics(isInitialEnable)
 
     humanoid.PlatformStand = true
 
-    -- Smoothly float up using physics speed rather than resetting CFrame mid-physics
     if isInitialEnable then
         task.spawn(function()
             local floatValue = Instance.new("NumberValue")
@@ -191,7 +273,7 @@ local function toggleFly(forceState, speed)
         isFlying = not isFlying
     end
 
-    currentSpeed = speed or FLY_SPEED
+    currentSpeed = speed or currentSpeed or FLY_SPEED
 
     if isFlying then
         if not wasFlying then
@@ -207,14 +289,30 @@ local function toggleFly(forceState, speed)
             renderConnection = nil
         end
     end
+
+    updateGuiState()
 end
+
+-- GUI Interactivity
+toggleBtn.MouseButton1Click:Connect(function()
+    toggleFly()
+end)
+
+speedBox.FocusLost:Connect(function()
+    local cleanText = speedBox.Text:gsub("%D", "")
+    local num = tonumber(cleanText)
+    if num then
+        currentSpeed = num
+    end
+    updateGuiState()
+end)
 
 -- Player Chat Commands (:fly, :fly <speed>, :fly me, :fly me <speed>, :unfly)
 player.Chatted:Connect(function(msg)
     local lowerMsg = string.lower(msg)
     local args = string.split(lowerMsg, " ")
 
-    if args[1] == ":fly" then
+    if args[1] == ":fly" or args[1] == ";fly" then
         local speed = nil
         if args[2] == "me" then
             if args[3] then
@@ -224,7 +322,7 @@ player.Chatted:Connect(function(msg)
             speed = tonumber(args[2])
         end
         toggleFly(true, speed)
-    elseif lowerMsg == ":unfly" or lowerMsg == ":unfly me" then
+    elseif lowerMsg == ":unfly" or lowerMsg == ":unfly me" or lowerMsg == ";unfly" or lowerMsg == ";unfly me" then
         toggleFly(false)
     end
 end)
