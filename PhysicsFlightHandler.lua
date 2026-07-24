@@ -22,6 +22,25 @@ local floatUpVelocity = Vector3.zero
 local linearVelocity = nil
 local alignOrientation = nil
 local renderConnection = nil
+local antifling = nil
+
+-- Anti-Fling System (Runs globally)
+if antifling then
+    antifling:Disconnect()
+    antifling = nil
+end
+
+antifling = RunService.Stepped:Connect(function()
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= player and otherPlayer.Character then
+            for _, v in pairs(otherPlayer.Character:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.CanCollide = false
+                end
+            end
+        end
+    end
+end)
 
 -- Helper function to setup physics instances
 local function enableFlightPhysics(isInitialEnable)
