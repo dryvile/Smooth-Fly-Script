@@ -150,10 +150,11 @@ local function toggleFly(forceState, speed)
     currentSpeed = speed or FLY_SPEED
 
     if isFlying then
-        local isInitialEnable = not wasFlying
-        enableFlightPhysics(isInitialEnable)
-        if not renderConnection then
-            renderConnection = RunService.RenderStepped:Connect(onRenderStep)
+        if not wasFlying then
+            enableFlightPhysics(true)
+            if not renderConnection then
+                renderConnection = RunService.RenderStepped:Connect(onRenderStep)
+            end
         end
     else
         disableFlightPhysics()
