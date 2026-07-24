@@ -123,17 +123,22 @@ end
 local function disableFlightPhysics()
     currentVelocity = Vector3.zero
     floatUpVelocity = Vector3.zero
+
     if linearVelocity then
         linearVelocity:Destroy()
         linearVelocity = nil
     end
+
     if alignOrientation then
         alignOrientation:Destroy()
         alignOrientation = nil
     end
-    if humanoid then
+
+    if humanoid and hrp then
         humanoid.PlatformStand = false
-        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+        -- Reset linear velocity to prevent physics glitching upon landing
+        hrp.AssemblyLinearVelocity = Vector3.zero
+        humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
     end
 end
 
@@ -237,8 +242,13 @@ local function onCharacterAdded(newChar)
 
     toggleFly(false)
 
-    humanoid.Died:Connect(function()
+    local deathConn
+    deathConn = humanoid.Died:Connect(function()
         toggleFly(false)
+        if deathConn then
+            deathConn:Disconnect()
+            deathConn = nil
+        end
     end)
 end
 
