@@ -71,7 +71,7 @@ local function enableFlightPhysics()
 
     -- Smoothly float character up 10 studs on activation
     local targetCFrame = hrp.CFrame + Vector3.new(0, 10, 0)
-    local tweenInfo = TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
     TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame}):Play()
 end
 
