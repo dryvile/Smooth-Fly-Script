@@ -17,6 +17,7 @@ local hrp = nil
 local isFlying = false
 local currentSpeed = FLY_SPEED
 local currentVelocity = Vector3.zero
+local floatUpVelocity = Vector3.zero
 
 local linearVelocity = nil
 local alignOrientation = nil
@@ -69,16 +70,40 @@ local function enableFlightPhysics(isInitialEnable)
 
     humanoid.PlatformStand = true
 
-    -- Smoothly float character up 10 studs only when first enabling flight
+    -- Smoothly float up using physics speed rather than resetting CFrame mid-physics
     if isInitialEnable then
-        local targetCFrame = hrp.CFrame + Vector3.new(0, 10, 0)
-        local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-        TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame}):Play()
+        task.spawn(function()
+            local floatValue = Instance.new("NumberValue")
+            floatValue.Value = 10
+            
+            local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+            local tween = TweenService:Create(floatValue, tweenInfo, {Value = 0})
+            
+            local connection
+            connection = RunService.Heartbeat:Connect(function()
+                if not isFlying then
+                    floatUpVelocity = Vector3.zero
+                    connection:Disconnect()
+                    floatValue:Destroy()
+                    return
+                end
+                floatUpVelocity = Vector3.new(0, floatValue.Value, 0)
+            end)
+
+            tween.Completed:Connect(function()
+                floatUpVelocity = Vector3.zero
+                connection:Disconnect()
+                floatValue:Destroy()
+            end)
+
+            tween:Play()
+        end)
     end
 end
 
 local function disableFlightPhysics()
     currentVelocity = Vector3.zero
+    floatUpVelocity = Vector3.zero
     if linearVelocity then
         linearVelocity:Destroy()
         linearVelocity = nil
@@ -126,7 +151,7 @@ local function onRenderStep(deltaTime)
     currentVelocity = currentVelocity:Lerp(targetVelocity, math.min(deltaTime * 6, 1))
 
     if linearVelocity then
-        linearVelocity.VectorVelocity = currentVelocity
+        linearVelocity.VectorVelocity = currentVelocity + floatUpVelocity
     end
 
     if alignOrientation then
