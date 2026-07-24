@@ -23,7 +23,7 @@ local alignOrientation = nil
 local renderConnection = nil
 
 -- Helper function to setup physics instances
-local function enableFlightPhysics()
+local function enableFlightPhysics(isInitialEnable)
     if not hrp or not humanoid then return end
 
     -- Clean up existing forces
@@ -69,10 +69,12 @@ local function enableFlightPhysics()
 
     humanoid.PlatformStand = true
 
-    -- Smoothly float character up 10 studs on activation
-    local targetCFrame = hrp.CFrame + Vector3.new(0, 10, 0)
-    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-    TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame}):Play()
+    -- Smoothly float character up 10 studs only when first enabling flight
+    if isInitialEnable then
+        local targetCFrame = hrp.CFrame + Vector3.new(0, 10, 0)
+        local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+        TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame}):Play()
+    end
 end
 
 local function disableFlightPhysics()
@@ -137,6 +139,8 @@ end
 
 -- Toggle Flying State
 local function toggleFly(forceState, speed)
+    local wasFlying = isFlying
+
     if forceState ~= nil then
         isFlying = forceState
     else
@@ -146,7 +150,8 @@ local function toggleFly(forceState, speed)
     currentSpeed = speed or FLY_SPEED
 
     if isFlying then
-        enableFlightPhysics()
+        local isInitialEnable = not wasFlying
+        enableFlightPhysics(isInitialEnable)
         if not renderConnection then
             renderConnection = RunService.RenderStepped:Connect(onRenderStep)
         end
