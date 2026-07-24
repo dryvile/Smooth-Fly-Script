@@ -1,6 +1,7 @@
 -- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 -- Variables
 local player = Players.LocalPlayer
@@ -67,6 +68,11 @@ local function enableFlightPhysics()
     alignOrientation.Parent = hrp
 
     humanoid.PlatformStand = true
+
+    -- Smoothly float character up 10 studs on activation
+    local targetCFrame = hrp.CFrame + Vector3.new(0, 10, 0)
+    local tweenInfo = TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame}):Play()
 end
 
 local function disableFlightPhysics()
