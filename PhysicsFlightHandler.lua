@@ -156,10 +156,9 @@ local function onRenderStep(deltaTime)
 
     if alignOrientation then
         local baseCFrame = CFrame.lookAt(hrp.Position, hrp.Position + camCFrame.LookVector)
-        local safeSpeed = currentSpeed > 0 and currentSpeed or 1
-        local forwardSpeedRatio = currentVelocity:Dot(camCFrame.LookVector) / safeSpeed
-        local pitchRatio = math.clamp(forwardSpeedRatio, -1, 1)
-        alignOrientation.CFrame = baseCFrame * CFrame.Angles(-pitchRatio * math.rad(45), 0, 0)
+        local forwardSpeed = currentVelocity:Dot(camCFrame.LookVector)
+        local pitchRatio = math.clamp(forwardSpeed / FLY_SPEED, -1, 1)
+        alignOrientation.CFrame = baseCFrame * CFrame.Angles(-pitchRatio * math.rad(25), 0, 0)
     end
 end
 
