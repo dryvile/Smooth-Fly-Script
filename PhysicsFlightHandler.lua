@@ -30,12 +30,11 @@ if antifling then
     antifling = nil
 end
 
--- Optimized Anti-Fling using Stepped connection
 antifling = RunService.Stepped:Connect(function()
-    for _, otherPlayer in ipairs(Players:GetPlayers()) do
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
         if otherPlayer ~= player and otherPlayer.Character then
-            for _, v in ipairs(otherPlayer.Character:GetDescendants()) do
-                if v:IsA("BasePart") and v.CanCollide then
+            for _, v in pairs(otherPlayer.Character:GetDescendants()) do
+                if v:IsA("BasePart") then
                     v.CanCollide = false
                 end
             end
@@ -57,16 +56,9 @@ local function enableFlightPhysics(isInitialEnable)
     -- Stop active animation tracks safely
     local animator = humanoid:FindFirstChildOfClass("Animator")
     if animator then
-        for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+        for _, track in animator:GetPlayingAnimationTracks() do
             track:Stop()
         end
-    end
-
-    -- Attachment check
-    local attachment = hrp:FindFirstChild("RootAttachment") or Instance.new("Attachment")
-    if not attachment.Parent then
-        attachment.Name = "RootAttachment"
-        attachment.Parent = hrp
     end
 
     -- Create LinearVelocity for smooth directional flying
@@ -75,6 +67,14 @@ local function enableFlightPhysics(isInitialEnable)
     linearVelocity.MaxForce = 100000
     linearVelocity.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector
     linearVelocity.RelativeTo = Enum.ActuatorRelativeTo.World
+
+    local attachment = hrp:FindFirstChild("RootAttachment")
+    if not attachment then
+        attachment = Instance.new("Attachment")
+        attachment.Name = "RootAttachment"
+        attachment.Parent = hrp
+    end
+
     linearVelocity.Attachment0 = attachment
     linearVelocity.Parent = hrp
 
@@ -102,7 +102,7 @@ local function enableFlightPhysics(isInitialEnable)
             connection = RunService.Heartbeat:Connect(function()
                 if not isFlying then
                     floatUpVelocity = Vector3.zero
-                    if connection then connection:Disconnect() end
+                    connection:Disconnect()
                     floatValue:Destroy()
                     return
                 end
@@ -111,7 +111,7 @@ local function enableFlightPhysics(isInitialEnable)
 
             tween.Completed:Connect(function()
                 floatUpVelocity = Vector3.zero
-                if connection then connection:Disconnect() end
+                connection:Disconnect()
                 floatValue:Destroy()
             end)
 
@@ -176,7 +176,7 @@ local function onRenderStep(deltaTime)
     if alignOrientation then
         local baseCFrame = CFrame.lookAt(hrp.Position, hrp.Position + camCFrame.LookVector)
         local forwardSpeed = currentVelocity:Dot(camCFrame.LookVector)
-        local pitchRatio = math.clamp(forwardSpeed / currentSpeed, -1, 1)
+        local pitchRatio = math.clamp(forwardSpeed / FLY_SPEED, -1, 1)
         alignOrientation.CFrame = baseCFrame * CFrame.Angles(-pitchRatio * math.rad(25), 0, 0)
     end
 end
