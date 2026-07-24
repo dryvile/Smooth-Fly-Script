@@ -2,7 +2,6 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
-local TextChatService = game:GetService("TextChatService")
 
 -- Variables
 local player = Players.LocalPlayer
@@ -10,7 +9,6 @@ local camera = workspace.CurrentCamera
 
 -- Configuration
 local FLY_SPEED = 50
-local LERP_SMOOTHNESS = 6 -- Smooth movement responsiveness factor
 
 -- State Variables
 local character = nil
@@ -26,16 +24,17 @@ local alignOrientation = nil
 local renderConnection = nil
 local antifling = nil
 
--- Anti-Fling System (Optimized pass to prevent severe lag)
+-- Anti-Fling System (Runs globally)
 if antifling then
     antifling:Disconnect()
     antifling = nil
 end
 
+-- Optimized Anti-Fling using Stepped connection
 antifling = RunService.Stepped:Connect(function()
     for _, otherPlayer in ipairs(Players:GetPlayers()) do
         if otherPlayer ~= player and otherPlayer.Character then
-            for _, v in ipairs(otherPlayer.Character:GetChildren()) do
+            for _, v in ipairs(otherPlayer.Character:GetDescendants()) do
                 if v:IsA("BasePart") and v.CanCollide then
                     v.CanCollide = false
                 end
@@ -58,9 +57,16 @@ local function enableFlightPhysics(isInitialEnable)
     -- Stop active animation tracks safely
     local animator = humanoid:FindFirstChildOfClass("Animator")
     if animator then
-        for _, track in animator:GetPlayingAnimationTracks() do
+        for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
             track:Stop()
         end
+    end
+
+    -- Attachment check
+    local attachment = hrp:FindFirstChild("RootAttachment") or Instance.new("Attachment")
+    if not attachment.Parent then
+        attachment.Name = "RootAttachment"
+        attachment.Parent = hrp
     end
 
     -- Create LinearVelocity for smooth directional flying
@@ -69,14 +75,6 @@ local function enableFlightPhysics(isInitialEnable)
     linearVelocity.MaxForce = 100000
     linearVelocity.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector
     linearVelocity.RelativeTo = Enum.ActuatorRelativeTo.World
-
-    local attachment = hrp:FindFirstChild("RootAttachment")
-    if not attachment then
-        attachment = Instance.new("Attachment")
-        attachment.Name = "RootAttachment"
-        attachment.Parent = hrp
-    end
-
     linearVelocity.Attachment0 = attachment
     linearVelocity.Parent = hrp
 
@@ -169,9 +167,7 @@ local function onRenderStep(deltaTime)
         end
     end
 
-    -- Frame-rate independent Lerp interpolation calculation
-    local alpha = 1 - math.exp(-LERP_SMOOTHNESS * deltaTime)
-    currentVelocity = currentVelocity:Lerp(targetVelocity, alpha)
+    currentVelocity = currentVelocity:Lerp(targetVelocity, math.min(deltaTime * 6, 1))
 
     if linearVelocity then
         linearVelocity.VectorVelocity = currentVelocity + floatUpVelocity
@@ -180,7 +176,7 @@ local function onRenderStep(deltaTime)
     if alignOrientation then
         local baseCFrame = CFrame.lookAt(hrp.Position, hrp.Position + camCFrame.LookVector)
         local forwardSpeed = currentVelocity:Dot(camCFrame.LookVector)
-        local pitchRatio = math.clamp(forwardSpeed / FLY_SPEED, -1, 1)
+        local pitchRatio = math.clamp(forwardSpeed / currentSpeed, -1, 1)
         alignOrientation.CFrame = baseCFrame * CFrame.Angles(-pitchRatio * math.rad(25), 0, 0)
     end
 end
@@ -213,8 +209,8 @@ local function toggleFly(forceState, speed)
     end
 end
 
--- Chat Command Processing Function
-local function parseCommand(msg)
+-- Player Chat Commands (:fly, :fly <speed>, :fly me, :fly me <speed>, :unfly)
+player.Chatted:Connect(function(msg)
     local lowerMsg = string.lower(msg)
     local args = string.split(lowerMsg, " ")
 
@@ -231,18 +227,7 @@ local function parseCommand(msg)
     elseif lowerMsg == ":unfly" or lowerMsg == ":unfly me" then
         toggleFly(false)
     end
-end
-
--- Player Chat Commands (Supports both modern TextChatService & legacy chat)
-if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-    TextChatService.OnIncomingChatMessage = function(message)
-        if message.TextSource and message.TextSource.UserId == player.UserId then
-            parseCommand(message.Text)
-        end
-    end
-else
-    player.Chatted:Connect(parseCommand)
-end
+end)
 
 -- Character Handling
 local function onCharacterAdded(newChar)
