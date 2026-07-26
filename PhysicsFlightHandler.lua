@@ -166,9 +166,7 @@ local function onRenderStep(deltaTime)
 
         targetVelocity = (camCFrame.LookVector * forwardInput) + (camCFrame.RightVector * rightInput)
         if targetVelocity.Magnitude > 0 then
-            local rawInputMagnitude = math.clamp(moveDir.Magnitude, 0, 1)
-            local easedInput = rawInputMagnitude * rawInputMagnitude
-            targetVelocity = targetVelocity.Unit * (currentSpeed * easedInput)
+            targetVelocity = targetVelocity.Unit * currentSpeed
         end
     end
 
@@ -181,7 +179,7 @@ local function onRenderStep(deltaTime)
     if alignOrientation then
         local baseCFrame = CFrame.lookAt(hrp.Position, hrp.Position + camCFrame.LookVector)
         local forwardSpeed = currentVelocity:Dot(camCFrame.LookVector)
-        local pitchRatio = math.clamp(forwardSpeed / FLY_SPEED, -1, 1)
+        local pitchRatio = math.clamp(forwardSpeed / math.max(currentSpeed, 1), -1, 1)
         alignOrientation.CFrame = baseCFrame * CFrame.Angles(-pitchRatio * math.rad(25), 0, 0)
     end
 end
@@ -196,7 +194,7 @@ local function toggleFly(forceState, speed)
         isFlying = not isFlying
     end
 
-    currentSpeed = speed or FLY_SPEED
+    currentSpeed = speed or (humanoid and humanoid.WalkSpeed) or FLY_SPEED
 
     if isFlying then
         if not wasFlying then
