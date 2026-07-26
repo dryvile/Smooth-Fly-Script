@@ -8,7 +8,7 @@ local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
 -- Configuration
-local FLY_SPEED = 50
+local FLY_SPEED = 16
 
 -- State Variables
 local character = nil
