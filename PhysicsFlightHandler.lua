@@ -217,7 +217,7 @@ player.Chatted:Connect(function(msg)
     local lowerMsg = string.lower(msg)
     local args = string.split(lowerMsg, " ")
 
-    if args[1] == ":fly" then
+    if args[1] == ";fly" then
         local speed = nil
         if args[2] == "me" then
             if args[3] then
@@ -227,7 +227,7 @@ player.Chatted:Connect(function(msg)
             speed = tonumber(args[2])
         end
         toggleFly(true, speed)
-    elseif lowerMsg == ":unfly" or lowerMsg == ":unfly me" then
+    elseif lowerMsg == ";unfly" or lowerMsg == ";unfly me" then
         toggleFly(false)
     end
 end)
