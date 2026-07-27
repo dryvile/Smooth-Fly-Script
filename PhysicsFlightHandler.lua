@@ -25,16 +25,6 @@ local antifling = nil
 -- Configuration
 local FLY_SPEED = 16
 
--- Infinite Jump
-UserInputService.JumpRequest:Connect(function()
-    if not isFlying and player.Character then
-        local hum = player.Character:FindFirstChildOfClass("Humanoid")
-        if hum then
-            hum:ChangeState(Enum.HumanoidStateType.Jumping)
-        end
-    end
-end)
-
 -- Anti-Fling System (Runs globally)
 if antifling then
     antifling:Disconnect()
@@ -265,4 +255,3 @@ if player.Character then
     onCharacterAdded(player.Character)
 end
 player.CharacterAdded:Connect(onCharacterAdded)
-
