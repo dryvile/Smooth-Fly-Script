@@ -16,7 +16,6 @@ local isFlying = false
 local currentSpeed = 16
 local currentVelocity = Vector3.zero
 local floatUpVelocity = Vector3.zero
-local isJumping = false
 
 local linearVelocity = nil
 local alignOrientation = nil
@@ -26,15 +25,12 @@ local antifling = nil
 -- Configuration
 local FLY_SPEED = 16
 
--- Infinite Jump (With 0.5s Cooldown)
+-- Infinite Jump
 UserInputService.JumpRequest:Connect(function()
-    if not isFlying and player.Character and not isJumping then
+    if not isFlying and player.Character then
         local hum = player.Character:FindFirstChildOfClass("Humanoid")
         if hum then
-            isJumping = true
             hum:ChangeState(Enum.HumanoidStateType.Jumping)
-            task.wait(0.05)
-            isJumping = false
         end
     end
 end)
@@ -269,3 +265,4 @@ if player.Character then
     onCharacterAdded(player.Character)
 end
 player.CharacterAdded:Connect(onCharacterAdded)
+
