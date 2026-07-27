@@ -16,6 +16,7 @@ local isFlying = false
 local currentSpeed = 16
 local currentVelocity = Vector3.zero
 local floatUpVelocity = Vector3.zero
+local currentPitch = 0
 
 local linearVelocity = nil
 local alignOrientation = nil
@@ -125,6 +126,7 @@ end
 local function disableFlightPhysics()
     currentVelocity = Vector3.zero
     floatUpVelocity = Vector3.zero
+    currentPitch = 0
 
     if linearVelocity then
         linearVelocity:Destroy()
@@ -182,8 +184,12 @@ local function onRenderStep(deltaTime)
     if alignOrientation then
         local baseCFrame = CFrame.lookAt(hrp.Position, hrp.Position + camCFrame.LookVector)
         local forwardSpeed = currentVelocity:Dot(camCFrame.LookVector)
-        local pitchRatio = math.clamp(forwardSpeed / 50, -1, 1)
-        alignOrientation.CFrame = baseCFrame * CFrame.Angles(-pitchRatio * math.rad(25), 0, 0)
+        local targetPitchRatio = math.clamp(forwardSpeed / 50, -1, 1)
+        local targetPitch = -targetPitchRatio * math.rad(25)
+
+        -- Smoothly ease into/out of the lean angle
+        currentPitch = currentPitch + (targetPitch - currentPitch) * (1 - math.exp(-8 * deltaTime))
+        alignOrientation.CFrame = baseCFrame * CFrame.Angles(currentPitch, 0, 0)
     end
 end
 
