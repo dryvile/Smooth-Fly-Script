@@ -2,10 +2,21 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 -- Variables
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
+
+-- Infinite Jump
+UserInputService.JumpRequest:Connect(function()
+    if player.Character then
+        local hum = player.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
 
 -- Configuration
 local FLY_SPEED = 16
