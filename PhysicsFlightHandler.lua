@@ -30,7 +30,7 @@ local FLY_SPEED = 16
 UserInputService.JumpRequest:Connect(function()
     if not isFlying and player.Character then
         local currentTime = tick()
-        if currentTime - lastJumpTime >= 0.5 then
+        if currentTime - lastJumpTime >= 0.1 then
             lastJumpTime = currentTime
             local hum = player.Character:FindFirstChildOfClass("Humanoid")
             if hum then
