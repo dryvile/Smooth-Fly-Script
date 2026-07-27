@@ -86,7 +86,7 @@ local function enableFlightPhysics(isInitialEnable)
     alignOrientation.MaxTorque = 1000000
     alignOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment
     alignOrientation.Attachment0 = attachment
-    alignOrientation.Responsiveness = 200
+    alignOrientation.Responsiveness = 18 -- Lowered from 200 for smooth rotation transition
     alignOrientation.Parent = hrp
 
     humanoid.PlatformStand = true
