@@ -8,25 +8,12 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
--- Infinite Jump
-UserInputService.JumpRequest:Connect(function()
-    if player.Character then
-        local hum = player.Character:FindFirstChildOfClass("Humanoid")
-        if hum then
-            hum:ChangeState(Enum.HumanoidStateType.Jumping)
-        end
-    end
-end)
-
--- Configuration
-local FLY_SPEED = 16
-
 -- State Variables
 local character = nil
 local humanoid = nil
 local hrp = nil
 local isFlying = false
-local currentSpeed = FLY_SPEED
+local currentSpeed = 16
 local currentVelocity = Vector3.zero
 local floatUpVelocity = Vector3.zero
 
@@ -34,6 +21,19 @@ local linearVelocity = nil
 local alignOrientation = nil
 local renderConnection = nil
 local antifling = nil
+
+-- Configuration
+local FLY_SPEED = 16
+
+-- Infinite Jump
+UserInputService.JumpRequest:Connect(function()
+    if not isFlying and player.Character then
+        local hum = player.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
 
 -- Anti-Fling System (Runs globally)
 if antifling then
