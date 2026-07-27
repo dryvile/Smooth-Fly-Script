@@ -33,7 +33,7 @@ UserInputService.JumpRequest:Connect(function()
         if hum then
             isJumping = true
             hum:ChangeState(Enum.HumanoidStateType.Jumping)
-            task.wait(0.5)
+            task.wait(0.05)
             isJumping = false
         end
     end
