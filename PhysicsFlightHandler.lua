@@ -187,8 +187,8 @@ local function onRenderStep(deltaTime)
         local targetPitchRatio = math.clamp(forwardSpeed / 50, -1, 1)
         local targetPitch = -targetPitchRatio * math.rad(25)
 
-        -- Smoothly ease into/out of the lean angle
-        currentPitch = currentPitch + (targetPitch - currentPitch) * (1 - math.exp(-8 * deltaTime))
+        -- Gently ease into/out of the pitch angle over ~1 second
+        currentPitch = currentPitch + (targetPitch - currentPitch) * (1 - math.exp(-3 * deltaTime))
         alignOrientation.CFrame = baseCFrame * CFrame.Angles(currentPitch, 0, 0)
     end
 end
