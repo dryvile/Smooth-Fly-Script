@@ -65,7 +65,7 @@ local function enableFlightPhysics(isInitialEnable)
     -- Create LinearVelocity for smooth directional flying
     linearVelocity = Instance.new("LinearVelocity")
     linearVelocity.Name = "FlyLinearVelocity"
-    linearVelocity.MaxForce = 100000
+    linearVelocity.MaxForce = 1000000
     linearVelocity.VelocityConstraintMode = Enum.VelocityConstraintMode.Vector
     linearVelocity.RelativeTo = Enum.ActuatorRelativeTo.World
 
@@ -82,13 +82,14 @@ local function enableFlightPhysics(isInitialEnable)
     -- Create AlignOrientation to keep player facing camera direction
     alignOrientation = Instance.new("AlignOrientation")
     alignOrientation.Name = "FlyAlignOrientation"
-    alignOrientation.MaxTorque = 100000
+    alignOrientation.MaxTorque = 1000000
     alignOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment
     alignOrientation.Attachment0 = attachment
-    alignOrientation.Responsiveness = 35
+    alignOrientation.Responsiveness = 200
     alignOrientation.Parent = hrp
 
     humanoid.PlatformStand = true
+    humanoid.AutoRotate = false
 
     -- Smoothly float up using physics speed rather than resetting CFrame mid-physics
     if isInitialEnable then
@@ -137,6 +138,7 @@ local function disableFlightPhysics()
 
     if humanoid and hrp then
         humanoid.PlatformStand = false
+        humanoid.AutoRotate = true
         -- Reset linear velocity to prevent physics glitching upon landing
         hrp.AssemblyLinearVelocity = Vector3.zero
         humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
@@ -171,7 +173,7 @@ local function onRenderStep(deltaTime)
         end
     end
 
-    currentVelocity = currentVelocity:Lerp(targetVelocity, math.min(deltaTime * 6, 1))
+    currentVelocity = currentVelocity:Lerp(targetVelocity, 1 - math.exp(-12 * deltaTime))
 
     if linearVelocity then
         linearVelocity.VectorVelocity = currentVelocity + floatUpVelocity
@@ -201,7 +203,7 @@ local function toggleFly(forceState, speed)
         if not wasFlying then
             enableFlightPhysics(true)
             if not renderConnection then
-                renderConnection = RunService.RenderStepped:Connect(onRenderStep)
+                renderConnection = RunService.PreSimulation:Connect(onRenderStep)
             end
         end
     else
@@ -213,7 +215,7 @@ local function toggleFly(forceState, speed)
     end
 end
 
--- Player Chat Commands (:fly, :fly <speed>, :fly me, :fly me <speed>, :unfly)
+-- Player Chat Commands (;fly, ;fly <speed>, ;fly me, ;fly me <speed>, ;unfly)
 player.Chatted:Connect(function(msg)
     local lowerMsg = string.lower(msg)
     local args = string.split(lowerMsg, " ")
